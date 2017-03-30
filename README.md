@@ -1,4 +1,16 @@
+
 # Overview
+
+# Note for this version
+Modified the `csharp/PhoneNumbers.sln` to make it run at .Net 4.0 plateform, also removed `PhoneNumbers.Test` from original repo; 
+
+Also used 3rd party libs `ReadOnlyCollectionsExtensions`, `ReadOnlyCollectionsInterfaces`, which can both be got via NuGet
+
+Compiled reference is also available at `lib/PhoneNumbers.dll` with namespace `PhoneNumbers`, which is built by VS 2010 (Version 10.0.40219.1 SP1)
+
+Please refer original WIKI for more information.
+
+# From the original README -->
 
 # libphonenumber-csharp
 Clone of original C# port [here](https://bitbucket.org/pmezard/libphonenumber-csharp/wiki/Home).
@@ -41,3 +53,4 @@ C# port of Google's [libphonenumber library](https://github.com/googlei18n/libph
 This should be checked.
 
 Available on NuGet as package [`libphonenumber-csharp`](https://www.nuget.org/packages/libphonenumber-csharp).
+
