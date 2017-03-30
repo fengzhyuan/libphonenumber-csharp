@@ -20,7 +20,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using libphonenumber_csharp_portable;
 using CountryCodeSource = PhoneNumbers.PhoneNumber.Types.CountryCodeSource;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Collections;
 
 namespace PhoneNumbers
 {
@@ -76,7 +81,86 @@ namespace PhoneNumbers
         UNKNOWN
     }
 
-    /**
+    public interface IReadOnlyDictionary<TKey, TValue> : IEnumerable
+    {
+        bool ContainsKey(TKey key);
+        ICollection<TKey> Keys { get; }
+        ICollection<TValue> Values { get; }
+        int Count { get; }
+        bool TryGetValue(TKey key, out TValue value);
+        TValue this[TKey key] { get; }
+        bool Contains(KeyValuePair<TKey, TValue> item);
+        void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex);
+        IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator();
+    }
+
+    public class ReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
+    {
+        readonly IDictionary<TKey, TValue> _dictionary;
+
+        public ReadOnlyDictionary(IDictionary<TKey, TValue> dictionary)
+        {
+            _dictionary = dictionary;
+        }
+
+        #region IReadOnlyDictionary<TKey,TValue> Members
+
+        public bool ContainsKey(TKey key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
+
+        public ICollection<TKey> Keys
+        {
+            get { return _dictionary.Keys; }
+        }
+
+        public ICollection<TValue> Values
+        {
+            get { return _dictionary.Values; }
+        }
+
+        public int Count
+        {
+            get { return _dictionary.Count; }
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            return _dictionary.TryGetValue(key, out value);
+        }
+
+        public TValue this[TKey key]
+        {
+            get { return _dictionary[key]; }
+        }
+
+        public bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            return _dictionary.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            _dictionary.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        #endregion
+    }    /**
     * Utility for international phone numbers. Functionality includes formatting, parsing and
     * validation.
     *
@@ -94,7 +178,7 @@ namespace PhoneNumbers
     public class PhoneNumberUtil
     {
         // Flags to use when compiling regular expressions for phone numbers.
-        internal static readonly RegexOptions REGEX_FLAGS = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
+        internal const RegexOptions REGEX_FLAGS = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
         // The minimum and maximum length of the national significant number.
         internal const int MIN_LENGTH_FOR_NSN = 2;
         // The ITU says the maximum length should be 15, but we have found longer numbers in Germany.
@@ -162,7 +246,7 @@ namespace PhoneNumbers
         // always contains character(s) other than ASCII digits.
         // Note this regex also includes tilde, which signals waiting for the tone.
         private static readonly PhoneRegex UNIQUE_INTERNATIONAL_PREFIX =
-            new PhoneRegex("[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)?", InternalRegexOptions.Default);
+            new PhoneRegex("[\\d]+(?:[~\u2053\u223C\uFF5E][\\d]+)?", RegexOptions.None);
 
         // Regular expression of acceptable punctuation found in phone numbers. This excludes punctuation
         // found as a leading character only.
@@ -179,8 +263,8 @@ namespace PhoneNumbers
         private static readonly String VALID_ALPHA;
 
         internal const String PLUS_CHARS = "+\uFF0B";
-        internal static readonly PhoneRegex PLUS_CHARS_PATTERN = new PhoneRegex("[" + PLUS_CHARS + "]+", InternalRegexOptions.Default);
-        private static readonly PhoneRegex SEPARATOR_PATTERN = new PhoneRegex("[" + VALID_PUNCTUATION + "]+", InternalRegexOptions.Default);
+        internal static readonly PhoneRegex PLUS_CHARS_PATTERN = new PhoneRegex("[" + PLUS_CHARS + "]+", RegexOptions.None);
+        private static readonly PhoneRegex SEPARATOR_PATTERN = new PhoneRegex("[" + VALID_PUNCTUATION + "]+", RegexOptions.None);
         private static readonly Regex CAPTURING_DIGIT_PATTERN;
 
         // Regular expression of acceptable characters that may start a phone number for the purposes of
@@ -198,12 +282,12 @@ namespace PhoneNumbers
         // actually two phone numbers, (530) 583-6985 x302 and (530) 583-6985 x2303. We remove the second
         // extension so that the first number is parsed correctly.
         private static readonly String SECOND_NUMBER_START = "[\\\\/] *x";
-        internal static readonly Regex SECOND_NUMBER_START_PATTERN = new Regex(SECOND_NUMBER_START, InternalRegexOptions.Default);
+        internal static readonly Regex SECOND_NUMBER_START_PATTERN = new Regex(SECOND_NUMBER_START, RegexOptions.None);
 
         // We use this pattern to check if the phone number has at least three letters in it - if so, then
         // we treat it as a number where some phone-number digits are represented by letters.
         private static readonly PhoneRegex VALID_ALPHA_PHONE_PATTERN =
-            new PhoneRegex("(?:.*?[A-Za-z]){3}.*", InternalRegexOptions.Default);
+            new PhoneRegex("(?:.*?[A-Za-z]){3}.*", RegexOptions.None);
 
         // Regular expression of viable phone numbers. This is location independent. Checks we have at
         // least three leading digits, and only valid punctuation, alpha characters and
@@ -268,16 +352,16 @@ namespace PhoneNumbers
         // have an extension prefix appended, followed by 1 or more digits.
         private static readonly PhoneRegex VALID_PHONE_NUMBER_PATTERN;
 
-        internal static readonly Regex NON_DIGITS_PATTERN = new Regex("\\D+", InternalRegexOptions.Default);
+        internal static readonly Regex NON_DIGITS_PATTERN = new Regex("\\D+", RegexOptions.None);
 
         // The FIRST_GROUP_PATTERN was originally set to $1 but there are some countries for which the
         // first group is not used in the national pattern (e.g. Argentina) so the $1 group does not match
         // correctly.  Therefore, we use \d, so that the first group actually used in the pattern will be
         // matched.
-        private static readonly Regex FIRST_GROUP_PATTERN = new Regex("(\\$\\d)", InternalRegexOptions.Default);
-        private static readonly Regex NP_PATTERN = new Regex("\\$NP", InternalRegexOptions.Default);
-        private static readonly Regex FG_PATTERN = new Regex("\\$FG", InternalRegexOptions.Default);
-        private static readonly Regex CC_PATTERN = new Regex("\\$CC", InternalRegexOptions.Default);
+        private static readonly Regex FIRST_GROUP_PATTERN = new Regex("(\\$\\d)", RegexOptions.None);
+        private static readonly Regex NP_PATTERN = new Regex("\\$NP", RegexOptions.None);
+        private static readonly Regex FG_PATTERN = new Regex("\\$FG", RegexOptions.None);
+        private static readonly Regex CC_PATTERN = new Regex("\\$CC", RegexOptions.None);
 
         static PhoneNumberUtil()
         {
@@ -374,10 +458,9 @@ namespace PhoneNumbers
                 String.Join("", ALPHA_MAPPINGS.Keys.Where(c => !"[, \\[\\]]".Contains(c.ToString())).ToList().ConvertAll(c => c.ToString()).ToArray()) +
                 String.Join("", ALPHA_MAPPINGS.Keys.Where(c => !"[, \\[\\]]".Contains(c.ToString())).ToList().ConvertAll(c => c.ToString()).ToArray()).ToLower();
 
-
-            CAPTURING_DIGIT_PATTERN = new Regex("(" + DIGITS + ")", InternalRegexOptions.Default);
+            CAPTURING_DIGIT_PATTERN = new Regex("(" + DIGITS + ")", RegexOptions.None);
             VALID_START_CHAR = "[" + PLUS_CHARS + DIGITS + "]";
-            VALID_START_CHAR_PATTERN = new PhoneRegex(VALID_START_CHAR, InternalRegexOptions.Default);
+            VALID_START_CHAR_PATTERN = new PhoneRegex(VALID_START_CHAR, RegexOptions.None);
 
             CAPTURING_EXTN_DIGITS = "(" + DIGITS + "{1,7})";
             VALID_PHONE_NUMBER =
@@ -554,7 +637,7 @@ namespace PhoneNumbers
 
         private void LoadMetadataFromFile(String filePrefix, String regionCode, int countryCallingCode)
         {
-            var asm = typeof(PhoneNumberUtil).GetTypeInfo().Assembly;
+            var asm = typeof(PhoneNumberUtil).Assembly;
             bool isNonGeoRegion = REGION_CODE_FOR_NON_GEO_ENTITY.Equals(regionCode);
             var name = asm.GetManifestResourceNames().Where(n => n.EndsWith(filePrefix)).FirstOrDefault() ?? "missing";
             using (var stream = asm.GetManifestResourceStream(name))
@@ -848,6 +931,11 @@ namespace PhoneNumbers
             }
             return normalizedNumber.ToString();
         }
+
+        //public ReadOnlyDictionary<int, List<String>> CallingCodeToRegion
+        //{
+        //    get { return (IReadOnlyDictionary<string, IReadOnlyList<string>>)countryCallingCodeToRegionCodeMap_.ToDictionary(pair => pair.Key, pair=> pair.Value.AsReadOnly()); }
+        //}
 
         public static PhoneNumberUtil GetInstance(String baseFileLocation,
             Dictionary<int, List<String>> countryCallingCodeToRegionCodeMap)

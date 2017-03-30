@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace PhoneNumbers
@@ -31,9 +34,8 @@ namespace PhoneNumbers
         public PhoneRegex(String pattern, RegexOptions options)
             : base(pattern, options)
         {
-            var o = options | InternalRegexOptions.Default;
-            allRegex_ = new Regex(String.Format("^(?:{0})$", pattern), o);
-            beginRegex_ = new Regex(String.Format("^(?:{0})", pattern), o);
+            allRegex_ = new Regex(String.Format("^(?:{0})$", pattern), options);
+            beginRegex_ = new Regex(String.Format("^(?:{0})", pattern), options);
         }
 
         public Match MatchAll(String value)

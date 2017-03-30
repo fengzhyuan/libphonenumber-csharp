@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "targets": {
+    ".NETPortable,Version=v4.5,Profile=Profile78": {}
+  },
+  "libraries": {},
+  "projectFileDependencyGroups": {
+    "": [],
+    ".NETPortable,Version=v4.5,Profile=Profile78": []
+  },
+  "packageFolders": {
+    "C:\\Users\\zfeng\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "restore": {
+      "projectUniqueName": "C:\\Users\\zfeng\\Downloads\\libphonenumber-csharp-master\\csharp\\PhoneNumbers\\PhoneNumbers.csproj",
+      "projectName": "PhoneNumbers",
+      "projectPath": "C:\\Users\\zfeng\\Downloads\\libphonenumber-csharp-master\\csharp\\PhoneNumbers\\PhoneNumbers.csproj",
+      "projectJsonPath": "C:\\Users\\zfeng\\Downloads\\libphonenumber-csharp-master\\csharp\\PhoneNumbers\\project.json",
+      "projectStyle": "ProjectJson"
+    },
+    "frameworks": {
+      "portable45-net45+win8+wp8": {}
+    }
+  }
+}
